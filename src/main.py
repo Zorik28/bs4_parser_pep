@@ -7,7 +7,7 @@ from tqdm import tqdm
 from urllib.parse import urljoin
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, MAIN_DOC_URL
+from constants import BASE_DIR, MAIN_DOC_URL, PEP_DOC_URL
 from outputs import control_output
 from utils import get_response, find_tag
 
@@ -117,10 +117,45 @@ def download(session):
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
+def pep_counter(session):
+    response = get_response(session, PEP_DOC_URL)
+    if response is None:
+        return
+    soup = BeautifulSoup(response.text, 'lxml')
+    section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})
+    tbody_tag = find_tag(section_tag, 'tbody')
+    tr_tags = tbody_tag.find_all('tr')
+    for pep in tqdm(tr_tags):
+        # Получаем букву статуса
+        status_letter = pep.td.abbr.text[1:]
+        # Находим гиперссылку
+        href = find_tag(pep, 'a').get('href')
+        # Получаем ссылку на страницу pep
+        url = urljoin(base=PEP_DOC_URL, url=href)
+        response = get_response(session, url)
+        if response is None:
+            continue
+        soup = BeautifulSoup(markup=response.text, features='lxml')
+        section_tag = find_tag(soup, 'section', attrs={'id': 'pep-content'})
+        status = find_tag(section_tag, 'abbr')
+
+
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,
     'latest-versions': latest_versions,
-    'download': download
+    'download': download,
+    'pep': pep_counter
+}
+
+EXPECTED_STATUS = {
+    'A': ('Active', 'Accepted'),
+    'D': ('Deferred',),
+    'F': ('Final',),
+    'P': ('Provisional',),
+    'R': ('Rejected',),
+    'S': ('Superseded',),
+    'W': ('Withdrawn',),
+    '': ('Draft', 'Active'),
 }
 
 
