@@ -7,7 +7,7 @@ from tqdm import tqdm
 from urllib.parse import urljoin
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, MAIN_DOC_URL, PEP_DOC_URL
+from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, PEP_DOC_URL
 from outputs import control_output
 from utils import get_response, find_tag
 
@@ -27,7 +27,7 @@ def whats_new(session):
     )
     all_li = main_div.find_all('li', class_='toctree-l1')
     # Выводим все ссылки через цикл из списка all_li.
-    results = [('Ссылка на статью', 'Заголовок', 'Редактор, автор')]
+    results = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор'), ]
     for li in tqdm(all_li):
         tag_a = find_tag(soup=li, tag='a')
         href = tag_a.get('href')
@@ -68,7 +68,7 @@ def latest_versions(session):
     else:
         raise Exception('Не найден список c версиями Python')
 
-    results = [('Ссылка на статью', 'Заголовок', 'Редактор, автор')]
+    results = [('Ссылка на статью', 'Заголовок', 'Редактор, Aвтор')]
     # Шаблон для поиска версии и статуса:
     pattern = r'Python (?P<version>\d\.\d+) \((?P<status>.*)\)'
     # Цикл для перебора тегов <a>, полученных ранее.
@@ -117,7 +117,7 @@ def download(session):
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
-def pep_counter(session):
+def pep(session):
     response = get_response(session, PEP_DOC_URL)
     if response is None:
         return
@@ -125,37 +125,50 @@ def pep_counter(session):
     section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})
     tbody_tag = find_tag(section_tag, 'tbody')
     tr_tags = tbody_tag.find_all('tr')
+    # Заголовок таблицы и словарь с количеством PEP
+    results = [('Status', 'Quantity')]
+    status_sum = {}
+    total = 0
     for pep in tqdm(tr_tags):
-        # Получаем букву статуса
+        total += 1
+        # Извлекаем букву статуса
         status_letter = pep.td.abbr.text[1:]
-        # Находим гиперссылку
+        # Находим гиперссылку на страницу pep
         href = find_tag(pep, 'a').get('href')
         # Получаем ссылку на страницу pep
         url = urljoin(base=PEP_DOC_URL, url=href)
+        # Извлекаем статус со страницы pep
         response = get_response(session, url)
         if response is None:
             continue
         soup = BeautifulSoup(markup=response.text, features='lxml')
         section_tag = find_tag(soup, 'section', attrs={'id': 'pep-content'})
-        status = find_tag(section_tag, 'abbr')
+        status = find_tag(section_tag, 'abbr').text
+        if status not in EXPECTED_STATUS[status_letter]:
+            logging.info(
+                f'\n'
+                f'Несовпадающие статусы: \n'
+                f'{url}\n'
+                f'Статус в карточке: {status}\n'
+                f'Ожидаемые статусы: {EXPECTED_STATUS[status_letter]}'
+            )
+        # количество PEP в каждом статусе
+        if status not in status_sum:
+            status_sum[status] = 1
+        else:
+            status_sum[status] += 1
+    # Отсортируем словарь и вернём список кортежей
+    sorted_status_sum = sorted(status_sum.items())
+    results.extend(sorted_status_sum)
+    results.append(('Total', total))
+    return results
 
 
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,
     'latest-versions': latest_versions,
     'download': download,
-    'pep': pep_counter
-}
-
-EXPECTED_STATUS = {
-    'A': ('Active', 'Accepted'),
-    'D': ('Deferred',),
-    'F': ('Final',),
-    'P': ('Provisional',),
-    'R': ('Rejected',),
-    'S': ('Superseded',),
-    'W': ('Withdrawn',),
-    '': ('Draft', 'Active'),
+    'pep': pep
 }
 
 

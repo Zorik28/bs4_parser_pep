@@ -11,7 +11,7 @@ def configure_argument_parser(available_modes):
     parser.add_argument(
         'mode',
         choices=available_modes,
-        help='Режим работы парсера'
+        help='Режимы работы парсера'
     )
     parser.add_argument(
         '-c',
