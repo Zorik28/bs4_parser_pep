@@ -27,3 +27,8 @@ The parser can perform four functions:
 
 4. Open the parser documentation to display available modes:
 ```py src/main.py -h```
+
+
+#### Author
+Karapetian Zorik   
+Russian Federation, St. Petersburg, Kupchino.
