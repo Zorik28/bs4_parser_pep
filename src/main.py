@@ -7,9 +7,12 @@ from tqdm import tqdm
 from urllib.parse import urljoin
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, PEP_DOC_URL
+from constants import (BASE_DIR, EXPECTED_STATUS, LXML, MAIN_DOC_URL,
+                       PDF_ZIP_LINK, PEP_DOC_URL, PYTHON_VERSION_STATUS)
+from enums.headers import first_row, status_quantity
+from exceptions import FindVersionsException
 from outputs import control_output
-from utils import get_response, find_tag
+from utils import find_tag, get_response
 
 
 def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
@@ -18,7 +21,7 @@ def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
     if response is None:
         return
     # Создание "супа".
-    soup = BeautifulSoup(response.text, features='lxml')
+    soup = BeautifulSoup(response.text, features=LXML)
     # Нахождение нужных блоков в "супе".
     main_div = find_tag(
         soup=soup,
@@ -27,7 +30,7 @@ def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
     )
     all_li = main_div.find_all('li', class_='toctree-l1')
     # Выводим все ссылки через цикл из списка all_li.
-    results = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор'), ]
+    results = [first_row, ]
     for li in tqdm(all_li):
         tag_a = find_tag(soup=li, tag='a')
         href = tag_a.get('href')
@@ -37,7 +40,7 @@ def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
         if response is None:
             # Если ссылка не загрузится, программа перейдёт к следующей.
             continue
-        soup = BeautifulSoup(response.text, features='lxml')
+        soup = BeautifulSoup(response.text, features=LXML)
         python_version = find_tag(soup=soup, tag='h1').text
         editors = find_tag(soup=soup, tag='dl').text.replace('\n', ' ')
         results.append((url, python_version, editors))
@@ -48,7 +51,7 @@ def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
     response = get_response(session, MAIN_DOC_URL)
     if response is None:
         return
-    soup = BeautifulSoup(response.text, 'lxml')
+    soup = BeautifulSoup(response.text, LXML)
     sidebar = find_tag(
         soup=soup,
         tag='div',
@@ -58,18 +61,18 @@ def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
     # Перебор в цикле всех найденных списков.
     for ul in ul_tags:
         # Проверка, есть ли искомый текст в содержимом тега.
-        if 'All version' in ul.text:
+        if 'All versions' in ul.text:
             # Если текст найден, ищутся все теги <a> в этом списке.
             a_tags = ul.find_all('a')
             break
     # Если нужный список не нашёлся,
     # вызывается исключение и выполнение программы прерывается.
     else:
-        raise Exception('Не найден список c версиями Python')
+        raise FindVersionsException('Не найден список c версиями Python')
 
-    results = [('Ссылка на статью', 'Заголовок', 'Редактор, Aвтор')]
+    results = [first_row, ]
     # Шаблон для поиска версии и статуса:
-    pattern = r'Python (?P<version>\d\.\d+) \((?P<status>.*)\)'
+    pattern = PYTHON_VERSION_STATUS
     # Цикл для перебора тегов <a>, полученных ранее.
     for a_tag in a_tags:
         link = a_tag.get('href')
@@ -92,10 +95,10 @@ def download(session: CachedSession) -> None:
     response = get_response(session, downloads_url)
     if response is None:
         return
-    soup = BeautifulSoup(response.text, 'lxml')
+    soup = BeautifulSoup(response.text, LXML)
     table_tag = find_tag(soup=soup, tag='table', attrs={'class': 'docutils'})
     # compile() принимает строку, а возвращает объект регулярного выражения.
-    regex = re.compile(r'.+pdf-a4\.zip$')
+    regex = re.compile(PDF_ZIP_LINK)
     pdf_a4_tag = find_tag(soup=table_tag, tag='a', attrs={'href': regex})
     pdf_a4_link = pdf_a4_tag.get('href')
     # Получаем полную ссылку с помощью функции urljoin.
@@ -120,12 +123,12 @@ def pep(session: CachedSession) -> list[tuple[str, str]]:
     response = get_response(session, PEP_DOC_URL)
     if response is None:
         return
-    soup = BeautifulSoup(response.text, 'lxml')
+    soup = BeautifulSoup(response.text, LXML)
     section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})
     tbody_tag = find_tag(section_tag, 'tbody')
     tr_tags = tbody_tag.find_all('tr')
     # Заголовок таблицы и словарь с количеством PEP
-    results = [('Status', 'Quantity')]
+    results = [status_quantity, ]
     status_sum = {}
     total = 0
     for pep in tqdm(tr_tags):
@@ -140,7 +143,7 @@ def pep(session: CachedSession) -> list[tuple[str, str]]:
         response = get_response(session, url)
         if response is None:
             continue
-        soup = BeautifulSoup(markup=response.text, features='lxml')
+        soup = BeautifulSoup(markup=response.text, features=LXML)
         section_tag = find_tag(soup, 'section', attrs={'id': 'pep-content'})
         status = find_tag(section_tag, 'abbr').text
         if status not in EXPECTED_STATUS[status_letter]:

@@ -4,7 +4,8 @@ from argparse import ArgumentParser
 from logging.handlers import RotatingFileHandler
 from typing import Iterable
 
-from constants import BASE_DIR, DT_FORMAT, LOG_FORMAT
+from constants import DT_FORMAT, LOG_DIR, LOG_FILE, LOG_FORMAT
+from enums.modes import additional_modes
 
 
 def configure_argument_parser(available_modes: Iterable) -> ArgumentParser:
@@ -23,22 +24,19 @@ def configure_argument_parser(available_modes: Iterable) -> ArgumentParser:
     parser.add_argument(
         '-o',
         '--output',
-        choices=('pretty', 'file'),
+        choices=additional_modes,
         help='Дополнительные способы вывода данных'
     )
     return parser
 
 
 def configure_logging() -> None:
-    log_dir = BASE_DIR / 'logs'
-    log_dir.mkdir(exist_ok=True)
-    log_file = log_dir / 'parser.log'
-
+    LOG_DIR.mkdir(exist_ok=True)
     # Инициализация хендлера с ротацией логов.
     # Максимальный объём одного файла — 1МБ,
     # максимальное количество файлов с логами — 5.
     rotating_handler = RotatingFileHandler(
-        log_file, maxBytes=10**6, backupCount=5
+        LOG_FILE, maxBytes=10**6, backupCount=5
     )
     # Базовая настройка логирования basicConfig.
     logging.basicConfig(
