@@ -1,8 +1,8 @@
 import logging
 import re
-import requests_cache
 
 from bs4 import BeautifulSoup
+from requests_cache import CachedSession
 from tqdm import tqdm
 from urllib.parse import urljoin
 
@@ -12,7 +12,7 @@ from outputs import control_output
 from utils import get_response, find_tag
 
 
-def whats_new(session):
+def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
     whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
     response = get_response(session, whats_new_url)
     if response is None:
@@ -38,14 +38,13 @@ def whats_new(session):
             # Если ссылка не загрузится, программа перейдёт к следующей.
             continue
         soup = BeautifulSoup(response.text, features='lxml')
-        h1 = find_tag(soup=soup, tag='h1')
-        dl = find_tag(soup=soup, tag='dl')
-        dl_text = dl.text.replace('\n', ' ')
-        results.append((url, h1.text, dl_text))
+        python_version = find_tag(soup=soup, tag='h1').text
+        editors = find_tag(soup=soup, tag='dl').text.replace('\n', ' ')
+        results.append((url, python_version, editors))
     return results
 
 
-def latest_versions(session):
+def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
     response = get_response(session, MAIN_DOC_URL)
     if response is None:
         return
@@ -88,7 +87,7 @@ def latest_versions(session):
     return results
 
 
-def download(session):
+def download(session: CachedSession) -> None:
     downloads_url = urljoin(MAIN_DOC_URL, 'download.html')
     response = get_response(session, downloads_url)
     if response is None:
@@ -117,7 +116,7 @@ def download(session):
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
-def pep(session):
+def pep(session: CachedSession) -> list[tuple[str, str]]:
     response = get_response(session, PEP_DOC_URL)
     if response is None:
         return
@@ -172,7 +171,7 @@ MODE_TO_FUNCTION = {
 }
 
 
-def main():
+def main() -> None:
     # Запускаем функцию с конфигурацией логов.
     configure_logging()
     # Отмечаем в логах момент запуска программы.
@@ -185,7 +184,7 @@ def main():
     # Логируем переданные аргументы командной строки.
     logging.info(f'Аргументы командной строки: {args}')
     # Загрузка веб-страницы с кешированием.
-    session = requests_cache.CachedSession()
+    session = CachedSession()
     # Получение из аргументов командной строки нужного режима работы.
     # Если был передан ключ '--clear-cache', то args.clear_cache == True.
     if args.clear_cache:

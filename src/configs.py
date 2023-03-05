@@ -1,13 +1,14 @@
-import argparse
 import logging
 
+from argparse import ArgumentParser
 from logging.handlers import RotatingFileHandler
+from typing import Iterable
 
 from constants import BASE_DIR, DT_FORMAT, LOG_FORMAT
 
 
-def configure_argument_parser(available_modes):
-    parser = argparse.ArgumentParser(description='Парсер документации Python')
+def configure_argument_parser(available_modes: Iterable) -> ArgumentParser:
+    parser = ArgumentParser(description='Парсер документации Python')
     parser.add_argument(
         'mode',
         choices=available_modes,
@@ -28,7 +29,7 @@ def configure_argument_parser(available_modes):
     return parser
 
 
-def configure_logging():
+def configure_logging() -> None:
     log_dir = BASE_DIR / 'logs'
     log_dir.mkdir(exist_ok=True)
     log_file = log_dir / 'parser.log'

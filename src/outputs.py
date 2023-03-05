@@ -2,12 +2,13 @@ import csv
 import datetime as dt
 import logging
 
+from argparse import Namespace
 from prettytable import PrettyTable
 
 from constants import BASE_DIR, DATETIME_FORMAT
 
 
-def control_output(results, cli_args):
+def control_output(results: list[tuple], cli_args: Namespace) -> None:
     output = cli_args.output
     if output == 'pretty':
         # Вывод в формате PrettyTable.
@@ -20,13 +21,13 @@ def control_output(results, cli_args):
         default_output(results)
 
 
-def default_output(results):
+def default_output(results: list[tuple]) -> None:
     # Печатаем список results построчно.
     for row in results:
         print(*row)
 
 
-def pretty_output(results):
+def pretty_output(results: list[tuple]) -> None:
     # Инициализируем объект PrettyTable.
     table = PrettyTable()
     # В качестве заголовков устанавливаем первый элемент списка.
@@ -39,7 +40,7 @@ def pretty_output(results):
     print(table)
 
 
-def file_output(results, cli_args):
+def file_output(results: list[tuple], cli_args: Namespace) -> None:
     results_dir = BASE_DIR / 'results'
     results_dir.mkdir(exist_ok=True)
     # Получаем режим работы парсера из аргументов командной строки.
