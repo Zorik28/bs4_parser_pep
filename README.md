@@ -32,18 +32,19 @@ The parser can perform four functions:
 ### Example
 
 The output of the parser with command line interface arguments "latest-versions" and "-o pretty":
-    | Ссылка на статью                     | Заголовок    | Редактор, Aвтор |
-    |--------------------------------------|--------------|-----------------|
-    | https://docs.python.org/3.12/        | 3.12         | in development  |
-    | https://docs.python.org/3.11/        | 3.11         | stable          |
-    | https://docs.python.org/3.10/        | 3.10         | stable          |
-    | https://docs.python.org/3.9/         | 3.9          | security-fixes  |
-    | https://docs.python.org/3.8/         | 3.8          | security-fixes  |
-    | https://docs.python.org/3.7/         | 3.7          | security-fixes  |
-    | https://docs.python.org/3.6/         | 3.6          | EOL             |
-    | https://docs.python.org/3.5/         | 3.5          | EOL             |
-    | https://docs.python.org/2.7/         | 2.7          | EOL             |
-    | https://www.python.org/doc/versions/ | All versions |                 |
+
+| Ссылка на статью                     | Заголовок    | Редактор, Aвтор |
+|--------------------------------------|--------------|-----------------|
+| https://docs.python.org/3.12/        | 3.12         | in development  |
+| https://docs.python.org/3.11/        | 3.11         | stable          |
+| https://docs.python.org/3.10/        | 3.10         | stable          |
+| https://docs.python.org/3.9/         | 3.9          | security-fixes  |
+| https://docs.python.org/3.8/         | 3.8          | security-fixes  |
+| https://docs.python.org/3.7/         | 3.7          | security-fixes  |
+| https://docs.python.org/3.6/         | 3.6          | EOL             |
+| https://docs.python.org/3.5/         | 3.5          | EOL             |
+| https://docs.python.org/2.7/         | 2.7          | EOL             |
+| https://www.python.org/doc/versions/ | All versions |                 |
 
 
 #### Author
