@@ -16,74 +16,56 @@ from utils import find_tag, get_response
 
 
 def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
+    """Collects links to articles about innovations in Python
+    and information about the authors and editors of articles."""
     whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
     response = get_response(session, whats_new_url)
     if response is None:
         return
-    # Создание "супа".
-    soup = BeautifulSoup(response.text, features=LXML)
-    # Нахождение нужных блоков в "супе".
-    main_div = find_tag(
-        soup=soup,
-        tag='div',
-        attrs={'class': 'toctree-wrapper'}
-    )
-    all_li = main_div.find_all('li', class_='toctree-l1')
-    # Выводим все ссылки через цикл из списка all_li.
-    results = [first_row, ]
-    for li in tqdm(all_li):
-        tag_a = find_tag(soup=li, tag='a')
+    results = [first_row, ]  # Set the list where we will save the data
+    soup = BeautifulSoup(response.text, LXML)
+    main_div = find_tag(soup, 'div', {'class': 'toctree-wrapper'})
+    li_tags = main_div.find_all('li', class_='toctree-l1')
+    for li in tqdm(li_tags):
+        # The first tag <a> has the hyper reference we are looking for
+        tag_a = find_tag(li, 'a')
         href = tag_a.get('href')
-        url = urljoin(base=whats_new_url, url=href)
-        # Загрузка всех страниц со статьями.
+        url = urljoin(whats_new_url, href)
+        # Collecting information from the desired page
         response = get_response(session, url)
         if response is None:
-            # Если ссылка не загрузится, программа перейдёт к следующей.
             continue
-        soup = BeautifulSoup(response.text, features=LXML)
-        python_version = find_tag(soup=soup, tag='h1').text
-        editors = find_tag(soup=soup, tag='dl').text.replace('\n', ' ')
+        soup = BeautifulSoup(response.text, LXML)
+        python_version = find_tag(soup, 'h1').text
+        editors = find_tag(soup, 'dl').text.replace('\n', ' ')
         results.append((url, python_version, editors))
     return results
 
 
 def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
+    """Gathers information about Python version statuses."""
     response = get_response(session, MAIN_DOC_URL)
     if response is None:
         return
+    results = [first_row, ]  # Set the list where we will save the data
     soup = BeautifulSoup(response.text, LXML)
-    sidebar = find_tag(
-        soup=soup,
-        tag='div',
-        attrs={'class': 'sphinxsidebarwrapper'}
-    )
+    sidebar = find_tag(soup, 'div', {'class': 'sphinxsidebarwrapper'})
     ul_tags = sidebar.find_all('ul')
-    # Перебор в цикле всех найденных списков.
     for ul in ul_tags:
-        # Проверка, есть ли искомый текст в содержимом тега.
         if 'All versions' in ul.text:
-            # Если текст найден, ищутся все теги <a> в этом списке.
             a_tags = ul.find_all('a')
+            # If the required list is not found,
+            # the program is interrupted and exception is raised
             break
-    # Если нужный список не нашёлся,
-    # вызывается исключение и выполнение программы прерывается.
     else:
         raise FindVersionsException('Не найден список c версиями Python')
-
-    results = [first_row, ]
-    # Шаблон для поиска версии и статуса:
     pattern = PYTHON_VERSION_STATUS
-    # Цикл для перебора тегов <a>, полученных ранее.
     for a_tag in a_tags:
         link = a_tag.get('href')
-        # Поиск паттерна в ссылке.
+        # Search for pattern matching in the a_tag
         text_match = re.search(pattern=pattern, string=a_tag.text)
-        # Если строка соответствует паттерну,
-        # переменным присываивается содержимое групп, начиная с первой.
         if text_match is not None:
             version, status = text_match.groups()
-        # Если строка не соответствует паттерну,
-        # первой переменной присваивается весь текст, второй — пустая строка.
         else:
             version, status = a_tag.text, ''
         results.append((link, version, status))
@@ -91,35 +73,37 @@ def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
 
 
 def download(session: CachedSession) -> None:
+    """Downloads archive with up-to-date documentation."""
     downloads_url = urljoin(MAIN_DOC_URL, 'download.html')
     response = get_response(session, downloads_url)
     if response is None:
         return
     soup = BeautifulSoup(response.text, LXML)
-    table_tag = find_tag(soup=soup, tag='table', attrs={'class': 'docutils'})
-    # compile() принимает строку, а возвращает объект регулярного выражения.
+    table_tag = find_tag(soup, 'table', attrs={'class': 'docutils'})
+    # compile() takes a string and returns a regular expression object.
     regex = re.compile(PDF_ZIP_LINK)
-    pdf_a4_tag = find_tag(soup=table_tag, tag='a', attrs={'href': regex})
+    pdf_a4_tag = find_tag(table_tag, 'a', {'href': regex})
     pdf_a4_link = pdf_a4_tag.get('href')
-    # Получаем полную ссылку с помощью функции urljoin.
     archive_url = urljoin(downloads_url, pdf_a4_link)
+    # Filename formed from the last element of the "archive_url"
     filename = archive_url.split('/')[-1]
-    # Путь до новой директории
     downloads_dir = BASE_DIR / 'downloads'
-    # Создайте директорию.
     downloads_dir.mkdir(exist_ok=True)
-    # Получите путь до архива, объединив имя файла с директорией.
     archive_path = downloads_dir / filename
-    # Загрузка архива по ссылке через HTTP метод get()
-    response = session.get(archive_url)
-    # В бинарном режиме открывается файл на запись по указанному пути.
+    # Downloading archive
+    response = get_response(session, archive_url)
+    if response is None:
+        return
+    # Recording is done in binary mode ('wb')
     with open(archive_path, 'wb') as file:
-        # Полученный ответ записывается в файл.
         file.write(response.content)
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
 def pep(session: CachedSession) -> list[tuple[str, str]]:
+    """Counts the number of all pep documents,
+    matches tabular data with those on the page of the document,
+    sums the number of documents for each category"""
     response = get_response(session, PEP_DOC_URL)
     if response is None:
         return
@@ -127,8 +111,7 @@ def pep(session: CachedSession) -> list[tuple[str, str]]:
     section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})
     tbody_tag = find_tag(section_tag, 'tbody')
     tr_tags = tbody_tag.find_all('tr')
-    # Заголовок таблицы и словарь с количеством PEP
-    results = [status_quantity, ]
+    results = [status_quantity, ]  # Set the list where we will save the data
     status_sum = {}
     total = 0
     for pep in tqdm(tr_tags):

@@ -4,10 +4,10 @@
 This parser will help you keep up to date with the latest changes in Python versions!
 
 The parser can perform four functions:
-1. Collect links to articles about innovations in Python and collect information about the authors and editors of articles.
-2. Gather information about Python version statuses.
-3. Download archive with up-to-date documentation.
-4. Count the number of all pep documents, match tabular data with those on the page of the document, sum the number of documents for each category
+1. Collects links to articles about innovations in Python and information about the authors and editors of articles.
+2. Gathers information about Python version statuses.
+3. Downloads archive with up-to-date documentation.
+4. Counts the number of all pep documents, matches tabular data with those on the page of the document, sums the number of documents for each category
 
 
 ### Technology

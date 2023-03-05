@@ -9,6 +9,7 @@ from enums.modes import additional_modes
 
 
 def configure_argument_parser(available_modes: Iterable) -> ArgumentParser:
+    """Set up the argument parser."""
     parser = ArgumentParser(description='Парсер документации Python')
     parser.add_argument(
         'mode',
@@ -31,19 +32,16 @@ def configure_argument_parser(available_modes: Iterable) -> ArgumentParser:
 
 
 def configure_logging() -> None:
+    """Set up the logging. Handler initialization with log rotation.
+    The max size of file is 1MB, the max number of files with logs is 5."""
     LOG_DIR.mkdir(exist_ok=True)
-    # Инициализация хендлера с ротацией логов.
-    # Максимальный объём одного файла — 1МБ,
-    # максимальное количество файлов с логами — 5.
     rotating_handler = RotatingFileHandler(
         LOG_FILE, maxBytes=10**6, backupCount=5
     )
-    # Базовая настройка логирования basicConfig.
     logging.basicConfig(
         datefmt=DT_FORMAT,
         format=LOG_FORMAT,
-        # Уровень записи логов.
         level=logging.INFO,
-        # Вывод логов в терминал.
+        # Output logs to the stream.
         handlers=(rotating_handler, logging.StreamHandler())
     )
