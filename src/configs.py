@@ -4,12 +4,13 @@ from argparse import ArgumentParser
 from logging.handlers import RotatingFileHandler
 from typing import Iterable
 
-from constants import DT_FORMAT, LOG_DIR, LOG_FILE, LOG_FORMAT
+from constants import BASE_DIR, DT_FORMAT, LOG_FORMAT
 from enums.modes import additional_modes
+from utils import mkdir_and_path
 
 
 def configure_argument_parser(available_modes: Iterable) -> ArgumentParser:
-    """Set up the argument parser."""
+    """Set up the command line argument parser."""
     parser = ArgumentParser(description='Парсер документации Python')
     parser.add_argument(
         'mode',
@@ -34,9 +35,9 @@ def configure_argument_parser(available_modes: Iterable) -> ArgumentParser:
 def configure_logging() -> None:
     """Set up the logging. Handler initialization with log rotation.
     The max size of file is 1MB, the max number of files with logs is 5."""
-    LOG_DIR.mkdir(exist_ok=True)
+    log_file = mkdir_and_path(BASE_DIR, 'logs', 'parser.log')
     rotating_handler = RotatingFileHandler(
-        LOG_FILE, maxBytes=10**6, backupCount=5
+        log_file, maxBytes=10**6, backupCount=5
     )
     logging.basicConfig(
         datefmt=DT_FORMAT,

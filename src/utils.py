@@ -2,6 +2,7 @@ import logging
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
+from pathlib import Path
 from requests import RequestException, Response
 from requests_cache import CachedSession
 from typing import Optional
@@ -19,6 +20,19 @@ def get_response(session: CachedSession, url: str) -> Response:
         logging.exception(
             f'Возникла ошибка при загрузке страницы {url}',
             # function call stack display
+            stack_info=True
+        )
+
+
+def mkdir_and_path(path: Path, directory: str, filename: str) -> Path:
+    """Creats a directory and return the path, and also cathes the erorrs."""
+    try:
+        path_dir = path / directory
+        path_dir.mkdir(exist_ok=True)
+        return path_dir / filename
+    except OSError:
+        logging.exception(
+            f'Возникла ошибка при создании папки {directory}',
             stack_info=True
         )
 

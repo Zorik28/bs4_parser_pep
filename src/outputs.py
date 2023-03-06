@@ -6,9 +6,11 @@ from argparse import Namespace
 from prettytable import PrettyTable
 
 from constants import BASE_DIR, DATETIME_FORMAT
+from utils import mkdir_and_path
 
 
 def control_output(results: list[tuple], cli_args: Namespace) -> None:
+    """Sending parsing results to the selected output function."""
     output = cli_args.output
     if output == 'pretty':
         pretty_output(results)
@@ -36,15 +38,12 @@ def pretty_output(results: list[tuple]) -> None:
 def file_output(results: list[tuple], cli_args: Namespace) -> None:
     """Outputs data in .csv format file."""
     # Create the folder "results" if not exists
-    results_dir = BASE_DIR / 'results'
-    results_dir.mkdir(exist_ok=True)
-    # Get the parser mode from the command line arguments
     parser_mode = cli_args.mode
     now = dt.datetime.now()
     # Save the current date in the specified format
     now_formatted = now.strftime(DATETIME_FORMAT)
     filename = f'{parser_mode}_{now_formatted}.csv'
-    file_path = results_dir / filename
+    file_path = mkdir_and_path(BASE_DIR, 'results', filename)
     # Writing data to a file using the context manager in write mode ('w')
     with open(file_path, 'w', encoding='utf-8') as file:
         # dialect='unix' format is to ensure that the data

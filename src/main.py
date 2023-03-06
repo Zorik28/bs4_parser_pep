@@ -12,7 +12,7 @@ from constants import (BASE_DIR, EXPECTED_STATUS, LXML, MAIN_DOC_URL,
 from enums.headers import first_row, status_quantity
 from exceptions import FindVersionsException
 from outputs import control_output
-from utils import find_tag, get_response
+from utils import mkdir_and_path, find_tag, get_response
 
 
 def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
@@ -52,13 +52,13 @@ def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
     sidebar = find_tag(soup, 'div', {'class': 'sphinxsidebarwrapper'})
     ul_tags = sidebar.find_all('ul')
     for ul in ul_tags:
+        if 'All versions' not in ul.text and ul == ul_tags[-1]:
+            raise FindVersionsException('Не найден список c версиями Python')
         if 'All versions' in ul.text:
             a_tags = ul.find_all('a')
             # If the required list is not found,
             # the program is interrupted and exception is raised
             break
-    else:
-        raise FindVersionsException('Не найден список c версиями Python')
     pattern = PYTHON_VERSION_STATUS
     for a_tag in a_tags:
         link = a_tag.get('href')
@@ -87,9 +87,7 @@ def download(session: CachedSession) -> None:
     archive_url = urljoin(downloads_url, pdf_a4_link)
     # Filename formed from the last element of the "archive_url"
     filename = archive_url.split('/')[-1]
-    downloads_dir = BASE_DIR / 'downloads'
-    downloads_dir.mkdir(exist_ok=True)
-    archive_path = downloads_dir / filename
+    archive_path = mkdir_and_path(BASE_DIR, 'downloads', filename)
     # Downloading archive
     response = get_response(session, archive_url)
     if response is None:
@@ -107,28 +105,24 @@ def pep(session: CachedSession) -> list[tuple[str, str]]:
     response = get_response(session, PEP_DOC_URL)
     if response is None:
         return
+    # Set the variables where we will save the data
+    results, status_sum, total = [status_quantity, ], {}, 0
+
     soup = BeautifulSoup(response.text, LXML)
     section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})
     tbody_tag = find_tag(section_tag, 'tbody')
     tr_tags = tbody_tag.find_all('tr')
-    results = [status_quantity, ]  # Set the list where we will save the data
-    status_sum = {}
-    total = 0
     for pep in tqdm(tr_tags):
         total += 1
-        # Извлекаем букву статуса
-        status_letter = pep.td.abbr.text[1:]
-        # Находим гиперссылку на страницу pep
+        status_letter = pep.td.abbr.text[1:]        # Letter from the table
         href = find_tag(pep, 'a').get('href')
-        # Получаем ссылку на страницу pep
-        url = urljoin(base=PEP_DOC_URL, url=href)
-        # Извлекаем статус со страницы pep
-        response = get_response(session, url)
+        url = urljoin(base=PEP_DOC_URL, url=href)   # URL of pep document
+        response = get_response(session, url)    # Jumping to the document page
         if response is None:
             continue
         soup = BeautifulSoup(markup=response.text, features=LXML)
         section_tag = find_tag(soup, 'section', attrs={'id': 'pep-content'})
-        status = find_tag(section_tag, 'abbr').text
+        status = find_tag(section_tag, 'abbr').text  # Status from the page
         if status not in EXPECTED_STATUS[status_letter]:
             logging.info(
                 f'\n'
@@ -137,12 +131,11 @@ def pep(session: CachedSession) -> list[tuple[str, str]]:
                 f'Статус в карточке: {status}\n'
                 f'Ожидаемые статусы: {EXPECTED_STATUS[status_letter]}'
             )
-        # количество PEP в каждом статусе
         if status not in status_sum:
             status_sum[status] = 1
         else:
+            # Sums the number of documents for each category
             status_sum[status] += 1
-    # Отсортируем словарь и вернём список кортежей
     sorted_status_sum = sorted(status_sum.items())
     results.extend(sorted_status_sum)
     results.append(('Total', total))
@@ -158,34 +151,22 @@ MODE_TO_FUNCTION = {
 
 
 def main() -> None:
-    # Запускаем функцию с конфигурацией логов.
     configure_logging()
-    # Отмечаем в логах момент запуска программы.
     logging.info('Парсер запущен!')
-    # Конфигурация парсера аргументов командной строки —
-    # передача в функцию допустимых вариантов выбора.
+    # Passing valid choices to the parser of CLI arguments
     arg_parser = configure_argument_parser(MODE_TO_FUNCTION.keys())
-    # Считывание аргументов из командной строки.
+    # Reading arguments from the command line
     args = arg_parser.parse_args()
-    # Логируем переданные аргументы командной строки.
     logging.info(f'Аргументы командной строки: {args}')
-    # Загрузка веб-страницы с кешированием.
     session = CachedSession()
-    # Получение из аргументов командной строки нужного режима работы.
-    # Если был передан ключ '--clear-cache', то args.clear_cache == True.
     if args.clear_cache:
-        # Очистка кеша.
         session.cache.clear()
+    # Get the parser mode from the command line arguments
     parser_mode = args.mode
-    # Поиск и вызов нужной функции по ключу словаря.
-    # С вызовом функции передаётся и сессия.
     results = MODE_TO_FUNCTION[parser_mode](session)
 
-    # Если из функции вернулись какие-то результаты,
     if results is not None:
-        # передаём их в функцию вывода вместе с аргументами командной строки.
         control_output(results, args)
-    # Логируем завершение работы парсера.
     logging.info('Парсер завершил работу.')
 
 
