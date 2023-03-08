@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 from configs import configure_argument_parser, configure_logging
 from constants import (BASE_DIR, EXPECTED_STATUS, LXML, MAIN_DOC_URL,
                        PDF_ZIP_LINK, PEP_DOC_URL, PYTHON_VERSION_STATUS)
-from enums.headers import first_row, status_quantity
+from enums.headers import Header
 from exceptions import FindVersionsException
 from outputs import control_output
 from utils import find_tag, get_response, is_none, mkdir_and_path
@@ -20,7 +20,7 @@ def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
     and information about the authors and editors of articles."""
     whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
     response = is_none(get_response(session, whats_new_url))
-    results = [first_row, ]  # Set the list where we will save the data
+    results = [Header.first_row, ]  # Set the list where we will save the data
     soup = BeautifulSoup(response.text, LXML)
     main_div = find_tag(soup, 'div', {'class': 'toctree-wrapper'})
     li_tags = main_div.find_all('li', class_='toctree-l1')
@@ -41,7 +41,7 @@ def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
 def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
     """Gathers information about Python version statuses."""
     response = is_none(get_response(session, MAIN_DOC_URL))
-    results = [first_row, ]  # Set the list where we will save the data
+    results = [Header.first_row, ]  # Set the list where we will save the data
     soup = BeautifulSoup(response.text, LXML)
     sidebar = find_tag(soup, 'div', {'class': 'sphinxsidebarwrapper'})
     ul_tags = sidebar.find_all('ul')
@@ -94,7 +94,7 @@ def pep(session: CachedSession) -> list[tuple[str, str]]:
     sums the number of documents for each category"""
     response = is_none(get_response(session, PEP_DOC_URL))
     # Set the variables where we will save the data
-    results, status_sum, total = [status_quantity, ], {}, 0
+    results, status_sum, total = [Header.status_quantity, ], {}, 0
 
     soup = BeautifulSoup(response.text, LXML)
     section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})

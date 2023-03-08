@@ -1,13 +1,11 @@
 from enum import Enum
 
 
-class Choice(Enum):
+class AdditionalMode(Enum):
     PRETTY = 'pretty'
     FILE = 'file'
 
-    @staticmethod
-    def additional_modes():
-        return tuple(Choice._value2member_map_)
-
-
-additional_modes = Choice.additional_modes()
+    @classmethod
+    @property
+    def to_display(cls):
+        return tuple(cls._value2member_map_)

@@ -5,7 +5,7 @@ from logging.handlers import RotatingFileHandler
 from typing import Iterable
 
 from constants import BASE_DIR, DT_FORMAT, LOG_FORMAT
-from enums.modes import additional_modes
+from enums.modes import AdditionalMode
 from utils import mkdir_and_path
 
 
@@ -26,7 +26,7 @@ def configure_argument_parser(available_modes: Iterable) -> ArgumentParser:
     parser.add_argument(
         '-o',
         '--output',
-        choices=additional_modes,
+        choices=AdditionalMode.to_display,
         help='Дополнительные способы вывода данных'
     )
     return parser

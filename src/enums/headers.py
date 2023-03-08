@@ -8,10 +8,12 @@ class Header(Enum):
     STATUS = 'Status'
     QUANTITY = 'Quantity'
 
-    @staticmethod
-    def first_row():
-        return tuple(Header._value2member_map_)
+    @classmethod
+    @property
+    def first_row(cls):
+        return tuple(cls._value2member_map_)[:3]
 
-
-first_row = Header.first_row()[:3]
-status_quantity = Header.first_row()[3:]
+    @classmethod
+    @property
+    def status_quantity(cls):
+        return tuple(cls._value2member_map_)[3:]
