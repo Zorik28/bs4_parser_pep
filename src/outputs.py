@@ -11,22 +11,21 @@ from utils import mkdir_and_path
 
 def control_output(results: list[tuple], cli_args: Namespace) -> None:
     """Sending parsing results to the selected output function."""
-    output = cli_args.output
-    if output == 'pretty':
-        pretty_output(results)
-    elif output == 'file':
-        file_output(results, cli_args)
-    else:
-        default_output(results)
+    modes = {
+        'pretty': pretty_output,
+        'file': file_output,
+        None: default_output
+    }
+    modes[cli_args.output](results, cli_args)
 
 
-def default_output(results: list[tuple]) -> None:
+def default_output(results: list[tuple], s=None) -> None:
     """Terminal output function."""
     for row in results:
         print(*row)
 
 
-def pretty_output(results: list[tuple]) -> None:
+def pretty_output(results: list[tuple], s=None) -> None:
     """Outputs data in PrettyTable format."""
     table = PrettyTable()
     table.field_names = results[0]  # Set the first element as the title
@@ -37,12 +36,12 @@ def pretty_output(results: list[tuple]) -> None:
 
 def file_output(results: list[tuple], cli_args: Namespace) -> None:
     """Outputs data in .csv format file."""
-    # Create the folder "results" if not exists
     parser_mode = cli_args.mode
     now = dt.datetime.now()
     # Save the current date in the specified format
     now_formatted = now.strftime(DATETIME_FORMAT)
     filename = f'{parser_mode}_{now_formatted}.csv'
+    # Create the folder "results" if not exists
     file_path = mkdir_and_path(BASE_DIR, 'results', filename)
     # Writing data to a file using the context manager in write mode ('w')
     with open(file_path, 'w', encoding='utf-8') as file:

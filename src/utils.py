@@ -5,9 +5,9 @@ from bs4.element import Tag
 from pathlib import Path
 from requests import RequestException, Response
 from requests_cache import CachedSession
-from typing import Optional
+from typing import Optional, Callable
 
-from exceptions import ParserFindTagException
+from exceptions import NoneResponseException, ParserFindTagException
 
 
 def get_response(session: CachedSession, url: str) -> Response:
@@ -22,6 +22,17 @@ def get_response(session: CachedSession, url: str) -> Response:
             # function call stack display
             stack_info=True
         )
+
+
+def is_none(
+        func: Callable[[CachedSession, str], Response]
+) -> Callable[[CachedSession, str], Response]:
+    """Checks if response is None"""
+    if func is None:
+        error_msg = 'Нет контента на странице. Проверьте url в запросе!'
+        logging.error(error_msg, stack_info=True)
+        raise NoneResponseException(error_msg)
+    return func
 
 
 def mkdir_and_path(path: Path, directory: str, filename: str) -> Path:

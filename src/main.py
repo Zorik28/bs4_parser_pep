@@ -12,16 +12,14 @@ from constants import (BASE_DIR, EXPECTED_STATUS, LXML, MAIN_DOC_URL,
 from enums.headers import first_row, status_quantity
 from exceptions import FindVersionsException
 from outputs import control_output
-from utils import mkdir_and_path, find_tag, get_response
+from utils import find_tag, get_response, is_none, mkdir_and_path
 
 
 def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
     """Collects links to articles about innovations in Python
     and information about the authors and editors of articles."""
     whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
-    response = get_response(session, whats_new_url)
-    if response is None:
-        return
+    response = is_none(get_response(session, whats_new_url))
     results = [first_row, ]  # Set the list where we will save the data
     soup = BeautifulSoup(response.text, LXML)
     main_div = find_tag(soup, 'div', {'class': 'toctree-wrapper'})
@@ -32,9 +30,7 @@ def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
         href = tag_a.get('href')
         url = urljoin(whats_new_url, href)
         # Collecting information from the desired page
-        response = get_response(session, url)
-        if response is None:
-            continue
+        response = is_none(get_response(session, url))
         soup = BeautifulSoup(response.text, LXML)
         python_version = find_tag(soup, 'h1').text
         editors = find_tag(soup, 'dl').text.replace('\n', ' ')
@@ -44,9 +40,7 @@ def whats_new(session: CachedSession) -> list[tuple[str, str, str]]:
 
 def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
     """Gathers information about Python version statuses."""
-    response = get_response(session, MAIN_DOC_URL)
-    if response is None:
-        return
+    response = is_none(get_response(session, MAIN_DOC_URL))
     results = [first_row, ]  # Set the list where we will save the data
     soup = BeautifulSoup(response.text, LXML)
     sidebar = find_tag(soup, 'div', {'class': 'sphinxsidebarwrapper'})
@@ -75,9 +69,7 @@ def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
 def download(session: CachedSession) -> None:
     """Downloads archive with up-to-date documentation."""
     downloads_url = urljoin(MAIN_DOC_URL, 'download.html')
-    response = get_response(session, downloads_url)
-    if response is None:
-        return
+    response = is_none(get_response(session, downloads_url))
     soup = BeautifulSoup(response.text, LXML)
     table_tag = find_tag(soup, 'table', attrs={'class': 'docutils'})
     # compile() takes a string and returns a regular expression object.
@@ -89,9 +81,7 @@ def download(session: CachedSession) -> None:
     filename = archive_url.split('/')[-1]
     archive_path = mkdir_and_path(BASE_DIR, 'downloads', filename)
     # Downloading archive
-    response = get_response(session, archive_url)
-    if response is None:
-        return
+    response = is_none(get_response(session, archive_url))
     # Recording is done in binary mode ('wb')
     with open(archive_path, 'wb') as file:
         file.write(response.content)
@@ -102,9 +92,7 @@ def pep(session: CachedSession) -> list[tuple[str, str]]:
     """Counts the number of all pep documents,
     matches tabular data with those on the page of the document,
     sums the number of documents for each category"""
-    response = get_response(session, PEP_DOC_URL)
-    if response is None:
-        return
+    response = is_none(get_response(session, PEP_DOC_URL))
     # Set the variables where we will save the data
     results, status_sum, total = [status_quantity, ], {}, 0
 
@@ -117,9 +105,8 @@ def pep(session: CachedSession) -> list[tuple[str, str]]:
         status_letter = pep.td.abbr.text[1:]        # Letter from the table
         href = find_tag(pep, 'a').get('href')
         url = urljoin(base=PEP_DOC_URL, url=href)   # URL of pep document
-        response = get_response(session, url)    # Jumping to the document page
-        if response is None:
-            continue
+        # Jumping to the document page
+        response = is_none(get_response(session, url))
         soup = BeautifulSoup(markup=response.text, features=LXML)
         section_tag = find_tag(soup, 'section', attrs={'id': 'pep-content'})
         status = find_tag(section_tag, 'abbr').text  # Status from the page

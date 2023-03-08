@@ -4,5 +4,10 @@ class ParserFindTagException(Exception):
 
 
 class FindVersionsException(Exception):
-    """Called when no list of Python versions found"""
+    """Called when no list of Python versions found."""
+    pass
+
+
+class NoneResponseException(Exception):
+    """Called when response is absent."""
     pass
