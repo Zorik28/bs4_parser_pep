@@ -1,11 +1,12 @@
 import logging
 
+from pathlib import Path
+from typing import Optional, Callable
+
 from bs4 import BeautifulSoup
 from bs4.element import Tag
-from pathlib import Path
 from requests import RequestException, Response
 from requests_cache import CachedSession
-from typing import Optional, Callable
 
 from exceptions import NoneResponseException, ParserFindTagException
 

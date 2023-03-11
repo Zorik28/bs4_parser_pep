@@ -53,7 +53,7 @@ def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
             # If the required list is not found,
             # the program is interrupted and exception is raised
             break
-    pattern = PYTHON_VERSION_STATUS
+    pattern = re.compile(PYTHON_VERSION_STATUS)
     for a_tag in a_tags:
         link = a_tag.get('href')
         # Search for pattern matching in the a_tag

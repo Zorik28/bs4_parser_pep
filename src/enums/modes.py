@@ -8,4 +8,5 @@ class AdditionalMode(Enum):
     @classmethod
     @property
     def to_display(cls):
-        return tuple(cls._value2member_map_)
+        """Returns 'pretty' and 'file' modes"""
+        return tuple([item.value for item in cls])
