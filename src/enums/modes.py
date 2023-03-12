@@ -1,5 +1,7 @@
 from enum import Enum
 
+from utils import enum_values
+
 
 class AdditionalMode(Enum):
     PRETTY = 'pretty'
@@ -9,4 +11,4 @@ class AdditionalMode(Enum):
     @property
     def to_display(cls):
         """Returns 'pretty' and 'file' modes"""
-        return tuple([item.value for item in cls])
+        return enum_values(cls)

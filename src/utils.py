@@ -1,5 +1,5 @@
 import logging
-
+from enum import Enum
 from pathlib import Path
 from typing import Optional, Callable
 
@@ -59,3 +59,8 @@ def find_tag(
         logging.error(error_msg, stack_info=True)
         raise ParserFindTagException(error_msg)
     return searched_tag
+
+
+def enum_values(cls: Enum) -> tuple:
+    """Gets a tuple of values within enum class."""
+    return tuple([item.value for item in cls])

@@ -23,6 +23,7 @@ The parser can perform four functions:
 ```. venv/Scripts/activate```
 
 2. Install dependencies from requirements.txt:
+```py -m pip install --upgrade pip```
 ```pip install -r requirements.txt```
 
 4. Open the parser documentation to display available modes:

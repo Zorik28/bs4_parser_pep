@@ -53,11 +53,10 @@ def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
             # If the required list is not found,
             # the program is interrupted and exception is raised
             break
-    pattern = re.compile(PYTHON_VERSION_STATUS)
     for a_tag in a_tags:
         link = a_tag.get('href')
         # Search for pattern matching in the a_tag
-        text_match = re.search(pattern=pattern, string=a_tag.text)
+        text_match = re.search(PYTHON_VERSION_STATUS, a_tag.text)
         if text_match is not None:
             version, status = text_match.groups()
         else:
@@ -73,8 +72,7 @@ def download(session: CachedSession) -> None:
     soup = BeautifulSoup(response.text, LXML)
     table_tag = find_tag(soup, 'table', attrs={'class': 'docutils'})
     # compile() takes a string and returns a regular expression object.
-    regex = re.compile(PDF_ZIP_LINK)
-    pdf_a4_tag = find_tag(table_tag, 'a', {'href': regex})
+    pdf_a4_tag = find_tag(table_tag, 'a', {'href': PDF_ZIP_LINK})
     pdf_a4_link = pdf_a4_tag.get('href')
     archive_url = urljoin(downloads_url, pdf_a4_link)
     # Filename formed from the last element of the "archive_url"

@@ -1,7 +1,6 @@
 import csv
 import datetime as dt
 import logging
-
 from argparse import Namespace
 
 from prettytable import PrettyTable
@@ -20,13 +19,13 @@ def control_output(results: list[tuple], cli_args: Namespace) -> None:
     modes[cli_args.output](results, cli_args)
 
 
-def default_output(results: list[tuple], s=None) -> None:
+def default_output(results: list[tuple], *args) -> None:
     """Terminal output function."""
     for row in results:
         print(*row)
 
 
-def pretty_output(results: list[tuple], s=None) -> None:
+def pretty_output(results: list[tuple], *args) -> None:
     """Outputs data in PrettyTable format."""
     table = PrettyTable()
     table.field_names = results[0]  # Set the first element as the title
