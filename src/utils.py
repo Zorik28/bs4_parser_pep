@@ -37,7 +37,7 @@ def is_none(
 
 
 def mkdir_and_path(path: Path, directory: str, filename: str) -> Path:
-    """Creats a directory and return the path, and also cathes the erorrs."""
+    """Creats a directory and return the path, and also catches the erorrs."""
     try:
         path_dir = path / directory
         path_dir.mkdir(exist_ok=True)
