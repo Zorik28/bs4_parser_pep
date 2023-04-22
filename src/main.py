@@ -47,7 +47,7 @@ def latest_versions(session: CachedSession) -> list[tuple[str, str, str]]:
     ul_tags = sidebar.find_all('ul')
     for ul in ul_tags:
         if 'All versions' not in ul.text and ul == ul_tags[-1]:
-            raise FindVersionsException('Не найден список c версиями Python')
+            raise FindVersionsException('List of Python versions not found!')
         if 'All versions' in ul.text:
             a_tags = ul.find_all('a')
             # If the required list is not found,
@@ -83,7 +83,7 @@ def download(session: CachedSession) -> None:
     # Recording is done in binary mode ('wb')
     with open(archive_path, 'wb') as file:
         file.write(response.content)
-    logging.info(f'Архив был загружен и сохранён: {archive_path}')
+    logging.info(f'The archive has been downloaded -> {archive_path}')
 
 
 def pep(session: CachedSession) -> list[tuple[str, str]]:
@@ -111,10 +111,10 @@ def pep(session: CachedSession) -> list[tuple[str, str]]:
         if status not in EXPECTED_STATUS[status_letter]:
             logging.info(
                 f'\n'
-                f'Несовпадающие статусы: \n'
+                f'Mismatched statuses: \n'
                 f'{url}\n'
-                f'Статус в карточке: {status}\n'
-                f'Ожидаемые статусы: {EXPECTED_STATUS[status_letter]}'
+                f'Status on the page: {status}\n'
+                f'Expected statuses: {EXPECTED_STATUS[status_letter]}'
             )
         if status not in status_sum:
             status_sum[status] = 1
@@ -137,12 +137,12 @@ MODE_TO_FUNCTION = {
 
 def main() -> None:
     configure_logging()
-    logging.info('Парсер запущен!')
+    logging.info('Parser launched!')
     # Passing valid choices to the parser of CLI arguments
     arg_parser = configure_argument_parser(MODE_TO_FUNCTION.keys())
     # Reading arguments from the command line
     args = arg_parser.parse_args()
-    logging.info(f'Аргументы командной строки: {args}')
+    logging.info(f'Command Line Arguments: {args}')
     session = CachedSession()
     if args.clear_cache:
         session.cache.clear()
@@ -152,7 +152,7 @@ def main() -> None:
 
     if results is not None:
         control_output(results, args)
-    logging.info('Парсер завершил работу.')
+    logging.info('Parser has finished.')
 
 
 if __name__ == '__main__':

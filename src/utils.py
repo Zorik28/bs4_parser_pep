@@ -19,7 +19,7 @@ def get_response(session: CachedSession, url: str) -> Response:
         return response
     except RequestException:
         logging.exception(
-            f'Возникла ошибка при загрузке страницы {url}',
+            f'Error occurred while loading the page -> {url}!',
             # function call stack display
             stack_info=True
         )
@@ -30,7 +30,7 @@ def is_none(
 ) -> Callable[[CachedSession, str], Response]:
     """Checks if response is None"""
     if func is None:
-        error_msg = 'Нет контента на странице. Проверьте url в запросе!'
+        error_msg = 'No content on the page. Check the url in the request!'
         logging.error(error_msg, stack_info=True)
         raise NoneResponseException(error_msg)
     return func
@@ -44,7 +44,7 @@ def mkdir_and_path(path: Path, directory: str, filename: str) -> Path:
         return path_dir / filename
     except OSError:
         logging.exception(
-            f'Возникла ошибка при создании папки {directory}',
+            f'Error occurred while creating the folder -> {directory}!',
             stack_info=True
         )
 

@@ -10,7 +10,7 @@ from utils import mkdir_and_path
 
 def configure_argument_parser(available_modes: Iterable) -> ArgumentParser:
     """Set up the command line argument parser."""
-    parser = ArgumentParser(description='Парсер документации Python')
+    parser = ArgumentParser(description='Python documentation parser')
     parser.add_argument(
         'mode',
         choices=available_modes,

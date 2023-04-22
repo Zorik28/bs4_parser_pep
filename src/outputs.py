@@ -49,4 +49,4 @@ def file_output(results: list[tuple], cli_args: Namespace) -> None:
         # is recorded in the same way on different OS
         writer = csv.writer(file, dialect='unix')
         writer.writerows(results)
-    logging.info(f'Файл с результатами был сохранён: {file_path}')
+    logging.info(f'The result file has been saved -> {file_path}')
