@@ -4,7 +4,7 @@ from constants import LINK_HEADER_EDITOR, STATUS_QUANTITY
 from utils import enum_values
 
 
-class Header(Enum):
+class Header(str, Enum):
     ARTICLE_LINK = 'Ссылка на статью'
     HEADER = 'Заголовок'
     EDITOR = 'Редактор, Автор'

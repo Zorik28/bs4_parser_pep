@@ -3,7 +3,7 @@ from enum import Enum
 from utils import enum_values
 
 
-class AdditionalMode(Enum):
+class AdditionalMode(str, Enum):
     PRETTY = 'pretty'
     FILE = 'file'
 

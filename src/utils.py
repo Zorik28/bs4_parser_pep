@@ -63,4 +63,4 @@ def find_tag(
 
 def enum_values(cls: Enum) -> tuple:
     """Gets a tuple of values within enum class."""
-    return tuple([item.value for item in cls])
+    return tuple([item for item in cls])
