@@ -1,5 +1,5 @@
 beautifulsoup4==4.9.3
-lxml==4.6.3
+lxml==4.9.1
 prettytable==2.1.0
 pytest==7.1.0
 requests-cache==0.6.3
